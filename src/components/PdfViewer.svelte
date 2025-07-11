@@ -1,94 +1,99 @@
 <script>
-  import { onMount } from 'svelte';
-  import Icon from "@iconify/svelte";
+import Icon from "@iconify/svelte";
+import { onMount } from "svelte";
 
-  export let src;
+export let src;
 
-  let canvas;
-  let pdfDoc = null;
-  let pageNum = 1;
-  let pageRendering = false;
-  let pageNumPending = null;
-  let numPages = 0;
-  let loading = true; // Add loading state
+let canvas;
+let pdfDoc = null;
+let pageNum = 1;
+let pageRendering = false;
+let pageNumPending = null;
+let numPages = 0;
+let loading = true; // Add loading state
 
-  async function renderPage(num) {
-    pageRendering = true;
-    const page = await pdfDoc.getPage(num);
-    const viewport = page.getViewport({ scale: 1.5 });
+async function renderPage(num) {
+	pageRendering = true;
+	const page = await pdfDoc.getPage(num);
+	const viewport = page.getViewport({ scale: 1.5 });
 
-    const context = canvas.getContext('2d');
-    canvas.height = viewport.height;
-    canvas.width = viewport.width;
+	const context = canvas.getContext("2d");
+	canvas.height = viewport.height;
+	canvas.width = viewport.width;
 
-    const renderContext = {
-      canvasContext: context,
-      viewport: viewport,
-    };
-    const renderTask = page.render(renderContext);
+	const renderContext = {
+		canvasContext: context,
+		viewport: viewport,
+	};
+	const renderTask = page.render(renderContext);
 
-    renderTask.promise.then(() => {
-      pageRendering = false;
-      if (pageNumPending !== null) {
-        renderPage(pageNumPending);
-        pageNumPending = null;
-      }
-    });
-  }
+	renderTask.promise.then(() => {
+		pageRendering = false;
+		if (pageNumPending !== null) {
+			renderPage(pageNumPending);
+			pageNumPending = null;
+		}
+	});
+}
 
-  function queueRenderPage(num) {
-    if (pageRendering) {
-      pageNumPending = num;
-    } else {
-      renderPage(num);
-    }
-  }
+function queueRenderPage(num) {
+	if (pageRendering) {
+		pageNumPending = num;
+	} else {
+		renderPage(num);
+	}
+}
 
-  function onPrevPage() {
-    if (pageNum <= 1) {
-      return;
-    }
-    pageNum--;
-    queueRenderPage(pageNum);
-  }
+function onPrevPage() {
+	if (pageNum <= 1) {
+		return;
+	}
+	pageNum--;
+	queueRenderPage(pageNum);
+}
 
-  function onNextPage() {
-    if (pageNum >= numPages) {
-      return;
-    }
-    pageNum++;
-    queueRenderPage(pageNum);
-  }
+function onNextPage() {
+	if (pageNum >= numPages) {
+		return;
+	}
+	pageNum++;
+	queueRenderPage(pageNum);
+}
 
-  onMount(async () => {
-    const loadScript = (url) => {
-      return new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = url;
-        script.onload = resolve;
-        script.onerror = reject;
-        document.head.appendChild(script);
-      });
-    };
+onMount(async () => {
+	const loadScript = (url) => {
+		return new Promise((resolve, reject) => {
+			const script = document.createElement("script");
+			script.src = url;
+			script.onload = resolve;
+			script.onerror = reject;
+			document.head.appendChild(script);
+		});
+	};
 
-    try {
-      await Promise.all([
-        loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js'),
-        loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'),
-      ]);
+	try {
+		await Promise.all([
+			loadScript(
+				"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+			),
+			loadScript(
+				"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js",
+			),
+		]);
 
-      const { pdfjsLib } = globalThis;
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+		const { pdfjsLib } = globalThis;
+		pdfjsLib.GlobalWorkerOptions.workerSrc =
+			"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
-      pdfDoc = await pdfjsLib.getDocument(src).promise;
-      numPages = pdfDoc.numPages;
-      await renderPage(pageNum);
-      loading = false; // Set loading to false after rendering
-    } catch (error) {
-      console.error('Error loading PDF:', error);
-      loading = false; // Set loading to false even on error
-    }
-  });
+		pdfDoc = await pdfjsLib.getDocument(src).promise;
+		numPages = pdfDoc.numPages;
+		await renderPage(pageNum);
+		loading = false; // Set loading to false after rendering
+	} catch (error) {
+		console.error("Error loading PDF:", error);
+		loading = false; // Set loading to false even on error
+	}
+});
 </script>
 
 <div class="relative">
