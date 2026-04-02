@@ -17,7 +17,7 @@ So, I shifted to building a Tetris clone. Honestly, I didn't tackle this because
 
 Ultimately, I built this Guideline-compliant Tetris clone in **Godot 4.6** and **GDScript** entirely as a learning exercise. It proved to be a fantastic way to teach myself game development and prepare for my upcoming hobby game projects. 
 
-You can play the game here: https://tetz.netlify.app
+You can play the game here: https://tetzi.vercel.app
 
 ## Credits
 
